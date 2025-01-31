@@ -4,7 +4,7 @@ import os
 import sys
 
 # Cargar el modelo entrenado
-model = YOLO("/home/zaic/Desktop/raspberryRover/models/best.pt")
+model = YOLO("raspberryRover/models/best.pt")
 
 # Iniciar la captura de video (cámara web)
 cap = cv2.VideoCapture(0)  # Usar cámara web
