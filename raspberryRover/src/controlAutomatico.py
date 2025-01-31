@@ -1,7 +1,7 @@
 from ultralytics import YOLO
 import cv2
 
-model = YOLO("/home/zaic/Desktop/rover/models/best.pt")  # Cargar el modelo entrenado
+model = YOLO("../models/best.pt")  # Cargar el modelo entrenado
 
 cap = cv2.VideoCapture(0)  # Usar cmara web
 
