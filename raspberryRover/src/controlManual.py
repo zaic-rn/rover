@@ -2,16 +2,35 @@ import serial
 import time
 import cv2
 import os
+import subprocess
+
 
 class RoverController:
-    def __init__(self, port, baudrate=9600):
+    def __init__(self, mac_address, baudrate=9600):
+        self.mac_address = mac_address
+        self.rfcomm_port = "/dev/rfcomm0"
+        self.serial_connection = None
+
+        self.configurar_bluetooth()
+
         try:
-            self.serial_connection = serial.Serial(port, baudrate, timeout=1)
+            self.serial_connection = serial.Serial(self.rfcomm_port, baudrate, timeout=1)
             time.sleep(2)  # Esperar a que se establezca la conexión
             print("Conexión establecida con el Arduino.")
         except serial.SerialException as e:
-            print(f"Error al conectar con el puerto {port}: {e}")
+            print(f"Error al conectar con el puerto {self.rfcomm_port}: {e}")
             self.serial_connection = None
+
+    def configurar_bluetooth(self):
+        print("Configurando conexión Bluetooth...")
+        self.limpiar_rfcomm()
+        subprocess.run(["sudo", "rfcomm", "bind", "0", self.mac_address], check=True)
+        print("Bluetooth conectado correctamente.")
+
+    def limpiar_rfcomm(self):
+        print("Liberando cualquier conexión previa...")
+        subprocess.run(["sudo", "rfcomm", "release", "0"], check=False)
+        time.sleep(1)
 
     def enviar_comando(self, comando):
         if self.serial_connection and self.serial_connection.is_open:
@@ -26,7 +45,9 @@ class RoverController:
     def cerrar_conexion(self):
         if self.serial_connection and self.serial_connection.is_open:
             self.serial_connection.close()
-            print("Conexión cerrada.")
+            print("Conexión serial cerrada.")
+        self.limpiar_rfcomm()
+
 
 def mostrar_menu():
     print("\n--- Control del Rover ---")
@@ -41,6 +62,7 @@ def mostrar_menu():
     print("p: Tomar foto")
     print("e: Extraer imágenes del video")
     print("q: Salir")
+
 
 def grabar_video(output_dir, duration=10):
     cap = cv2.VideoCapture(0)  # Inicializar la cámara (0 para la cámara principal)
@@ -71,18 +93,16 @@ def grabar_video(output_dir, duration=10):
     cv2.destroyAllWindows()
     print(f"Video guardado en: {video_path}")
 
+
 def tomar_foto(output_dir):
-    cap = cv2.VideoCapture(0)  # Inicializar la cámara (0 para la cámara principal)
+    cap = cv2.VideoCapture(0)
     if not cap.isOpened():
         print("Error: No se pudo acceder a la cámara.")
         return
 
     os.makedirs(output_dir, exist_ok=True)
-
-    # Solución 1: Esperar para que la cámara ajuste la exposición
     time.sleep(2)
 
-    # Capturar varios frames para permitir ajuste dinámico
     for _ in range(5):
         ret, frame = cap.read()
 
@@ -95,6 +115,7 @@ def tomar_foto(output_dir):
 
     cap.release()
     cv2.destroyAllWindows()
+
 
 def extraer_imagenes(video_path, output_dir, frame_interval=10):
     cap = cv2.VideoCapture(video_path)
@@ -111,7 +132,6 @@ def extraer_imagenes(video_path, output_dir, frame_interval=10):
         if not ret:
             break
 
-        # Guardar solo los frames según el intervalo
         if frame_count % frame_interval == 0:
             image_path = os.path.join(output_dir, f"frame_{saved_count:05d}.jpg")
             cv2.imwrite(image_path, frame)
@@ -123,11 +143,11 @@ def extraer_imagenes(video_path, output_dir, frame_interval=10):
     cap.release()
     print(f"Se extrajeron {saved_count} imágenes del video.")
 
-if __name__ == "__main__":
-    puerto = "/dev/rfcomm0"  # Cambiar según el puerto de conexión
-    controlador = RoverController(puerto)
 
-    output_dir = "../media"  # Carpeta para guardar fotos, videos e imágenes
+if __name__ == "__main__":
+    mac_address = "98:D3:32:70:D8:75"  # MAC del HC-05
+    controlador = RoverController(mac_address)
+    output_dir = "../media"
 
     try:
         while True:
@@ -149,7 +169,6 @@ if __name__ == "__main__":
                 extraer_imagenes(video_path, images_dir, intervalo)
             else:
                 controlador.enviar_comando(comando)
-
     except KeyboardInterrupt:
         print("\nPrograma interrumpido por el usuario.")
     finally:
