@@ -4,7 +4,7 @@ import os
 import sys
 
 # Cargar el modelo entrenado
-model = YOLO("/home/zaic/Desktop/rover/raspberryRover/models/best.pt")
+model = YOLO("/home/zaic/Desktop/rover/models/best.pt")
 
 # Iniciar la captura de video (cámara web)
 cap = cv2.VideoCapture(0)  # Usar cámara web
@@ -37,14 +37,18 @@ while cap.isOpened():
     if display_available:
         # Si hay acceso a la pantalla, mostrar la imagen
         cv2.imshow("Detección de Línea", frame)
-        if cv2.waitKey(1) & 0xFF == ord('q'):
+
+        # Asegurarse de que la ventana sea actualizada correctamente
+        key = cv2.waitKey(1) & 0xFF
+        if key == ord('q'):
             break
     else:
         # Si no hay acceso a la pantalla (SSH), mostrar en consola
         print("Detección de línea: ")
         for r in results:
             for box in r.boxes:
-                print(f"Detección en [x1: {box.xyxy[0][0]}, y1: {box.xyxy[0][1]}, x2: {box.xyxy[0][2]}, y2: {box.xyxy[0][3]}]")
+                print(
+                    f"Detección en [x1: {box.xyxy[0][0]}, y1: {box.xyxy[0][1]}, x2: {box.xyxy[0][2]}, y2: {box.xyxy[0][3]}]")
 
 # Liberar la captura de video y cerrar
 cap.release()
