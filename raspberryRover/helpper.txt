@@ -1,0 +1,1 @@
+ sudo ~/Desktop/rover/raspberryRover/venv/bin/python3.11 controlManual.py

@@ -173,3 +173,4 @@ if __name__ == "__main__":
         print("\nPrograma interrumpido por el usuario.")
     finally:
         controlador.cerrar_conexion()
+        print("Programa finalizado.")
