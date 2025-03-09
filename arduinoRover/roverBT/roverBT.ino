@@ -152,8 +152,8 @@ const int pinesEncoders[] = {2, 3, 18, 19, 20, 21}; // Pines digitales de interr
 // Rover con los pines de cada motor
 Rover rover(22, 23, 4, 24, 25, 5, 26, 27, 6, 28, 29, 7, 30, 31, 8, 32, 33, 9);
 
-// SoftwareSerial para el Bluetooth
-SoftwareSerial bluetooth(52, 53); // RX, TX
+// SoftwareSerial para el Serial1
+//SoftwareSerial Serial1(52, 53); // RX, TX
 
 // ISR para cada encoder
 void isrEncoder0() { pulsos[0]++; }
@@ -168,7 +168,7 @@ void (*isrEncoders[6])() = {isrEncoder0, isrEncoder1, isrEncoder2, isrEncoder3, 
 
 void setup() {
     Serial.begin(9600); // Comunicación Serial (USB)
-    bluetooth.begin(9600); // Comunicación Bluetooth
+    Serial1.begin(9600); // Comunicación Serial1
 
     // Configurar los pines de los encoders como entrada y habilitar interrupciones
     for (int i = 0; i < 6; i++) {
@@ -188,7 +188,7 @@ void loop() {
         }
         interrupts();
 
-        // Calcular y enviar velocidades por Serial y Bluetooth
+        // Calcular y enviar velocidades por Serial y Serial1
         for (int i = 0; i < 6; i++) {
             float velocidadRPM = (pulsosMedidos[i] * 60.0) / PPR;
             float velocidadLineal = (velocidadRPM * 2 * PI * radioRueda) / 60.0;
@@ -200,13 +200,13 @@ void loop() {
         tiempoAnterior = tiempoActual;
     }
 
-    // Procesar comandos desde Serial o Bluetooth
+    // Procesar comandos desde Serial o Serial1
     if (Serial.available()) {
         char comando = Serial.read();
         procesarEntrada(comando);
     }
-    if (bluetooth.available()) {
-        char comando = bluetooth.read();
+    if (Serial1.available()) {
+        char comando = Serial1.read();
         procesarEntrada(comando);
     }
 
@@ -304,5 +304,9 @@ void actualizarMovimiento() {
 
 void enviarMensaje(String mensaje) {
     Serial.println(mensaje);
-    bluetooth.println(mensaje);
+    Serial1.println(mensaje);
 }
+
+
+
+
